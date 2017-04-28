@@ -13,18 +13,25 @@ int green = 0;
 int blue = 0;  
 
 /* Ambient and target(Black) color value */
-const int NORMAL[3] = {28, 23, 15};
-const int BLACK[3] = {40, 35, 25};
+const int NORMAL[3] = {2300, 1500, 1270000};
+const int BLACK[3] = {900, 800, 600};
 
 /* Pin for ESC */
-byte servoPin = 6;
+byte servoPin = 3;
 Servo servo;
 
 /* pin for IR tracking sensor */
-int sensorPin = A0;
+const int leftIRPin = A0;
+const int rightIRPin = A1;
+int l_IR_val = 0;
+int r_IR_val = 0;
 
 /* variables for IR tracking sensor */
 int sensorValue = 0;
+
+/* steering wheel */
+const int wheelingPin = 6;
+Servo wheeling;
 
 void setup()   
 {  
@@ -40,43 +47,34 @@ void setup()
 
   /* set ESC */
   servo.attach(servoPin);
-  servo.writeMicroseconds(1200); // send "stop" signal to ESC.
-  delay(1000); // delay to allow the ESC to recognize the stopped signal  servo.attach(servoPin);
+  wheeling.attach(wheelingPin);
+
 }
   
 
 void loop() 
 {  
-  color(); 
-  Serial.print("R:");  
-  Serial.print(red, DEC);  
-  Serial.print(" G: ");  
-  Serial.print(green, DEC);  
-  Serial.print(" B: ");  
-  Serial.print(blue, DEC);  
-  //Serial.println();  
-
-  /*
-  int signal = 1200; // Set signal value, which should be between 1100 and 1900
-  servo.writeMicroseconds(signal); // Send signal to ESC.
-  */
-  sensorValue = analogRead (sensorPin);
-  Serial.println (sensorValue, DEC); //debug
-  
+  int signal = 0;
+  color_data();
+  track_data();
+  DEBUG();
+   
+  wheeling.write(180);
   if(isBlack(red, green, blue)){
     Serial.println("- (Black Color)");
-    int signal = 1200; // Set signal value, which should be between 1100 and 1900
-    servo.writeMicroseconds(signal); // Send signal to ESC.    
+    signal = 1200; // Set signal value, which should be between 1100 and 1900
+    servo.writeMicroseconds(signal); // Send signal to ESC.
+    delay(600);  
   } else {
     Serial.println("- (Not Black)");
-    int signal = 0; // Set signal value, which should be between 1100 and 1900
+    int signal = 1100; // Set signal value, which should be between 1100 and 1900
     servo.writeMicroseconds(signal); // Send signal to ESC.  
   }
-  delay(1000);   
+   
 }  
 
     
-void color()  
+void color_data()  
 { 
   digitalWrite(s0, LOW);  
   digitalWrite(s1, HIGH);
@@ -105,6 +103,28 @@ int isBlack(int R, int G, int B) {
     if(R > BLACK[0] && G > BLACK[1] && B > BLACK[2])
       return 1;
     return 0;
+}
+
+void track_data()
+{
+  l_IR_val = analogRead(leftIRPin);
+  r_IR_val = analogRead(rightIRPin);
+}
+
+void DEBUG()
+{
+  Serial.print("R:");  
+  Serial.print(red, DEC);  
+  Serial.print(" G: ");  
+  Serial.print(green, DEC);  
+  Serial.print(" B: ");  
+  Serial.print(blue, DEC);
+
+  Serial.print(" Left IR : ");
+  Serial.print(l_IR_val, DEC);
+  Serial.print(" Right IR : ");
+  Serial.print(r_IR_val, DEC);
+  
 }
 
 
