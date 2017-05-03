@@ -62,7 +62,7 @@ void loop()
   wheeling.write(180);
   if(isBlack(red, green, blue)){
     Serial.println("- (Black Color)");
-    signal = 1200; // Set signal value, which should be between 1100 and 1900
+    signal = 1150; // Set signal value, which should be between 1100 and 1900
     servo.writeMicroseconds(signal); // Send signal to ESC.
     delay(600);  
   } else {
