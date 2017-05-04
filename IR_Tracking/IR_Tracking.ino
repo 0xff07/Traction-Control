@@ -15,21 +15,23 @@ Servo servo;
 const int wheelingPin = 6;
 Servo wheeling;
 #define SERVO_OFF 40
-#define SERVO_ZERO 105
+#define SERVO_ZERO 110
 #define SERVO_RIGHT_MAX (SERVO_ZERO + SERVO_OFF)
 #define SERVO_LEFT_MAX (SERVO_ZERO - SERVO_OFF)
 int ANGLES[2][5] = {{0}};
 
 /* user defined settings */
-#define timestep 25
 #define NOP_TIME 100
-#define NORMAL_POWER 1400
-const int ANGLE_OFFSET[2][5] = {{30, 10, 0, -10, -30}, 
-                                {20, 5, -5, -20, 0}};
-const int POW_OFFSET[2][5] = {{50, 25, 0, 25, 50}, 
-                              {45, 20, 20, 45, 0}};
-const int TURN_DELAY[2][5] = {  {25, 25, 25, 25, 25},  
-                                {25, 25, 25, 25, 0}};
+#define NORMAL_POWER 1375
+const int ANGLE_OFFSET[2][5] = {{15, 10, 0, -10, -15}, 
+                                {12, 5, -5, -12, 0}};
+const int POW_OFFSET[2][5] = {{0, 0, 0, 0, 0}, 
+                              {0, 0, 0, 0, 0}};
+const int TURN_DELAY[2][5] = {{400, 400, 400, 400, 400},  
+                              {300, 300, 300, 300, 0}};
+#define IR_THREASHOLD 500
+#define SAMPLE_INTERVAL 10
+#define SAMPLE_TIMES 3
 
 void setup()
 {  
@@ -37,24 +39,25 @@ void setup()
 
      /* set ESC */
     servo.attach(servoPin);
-    servo.writeMicroseconds(1100);
     wheeling.attach(wheelingPin);
     wheeling.write(SERVO_ZERO);
 
     for(int i = 0; i < 2; i++)
         for(int j = 0; j < 5; j++)
-            ANGLES[i][j] = NOTMAL_ANGLE + ANGLE_OFFSET[i][j];
+            ANGLES[i][j] = SERVO_ZERO + ANGLE_OFFSET[i][j];
 }
   
 
 void loop() 
 {    
     track_data();
+    
     IR_state = get_IR_state();
-    DEBUG();
-    delay(NOP_TIME);
+    DEBUG(); 
 
     switch(IR_state){
+       
+        /* Actions to do if there's only 1 IR senses black line */
         case 16 :
             turn(ANGLES[0][0], NORMAL_POWER + POW_OFFSET[0][0],TURN_DELAY[0][0]);
             break;
@@ -67,10 +70,12 @@ void loop()
         case 2 :
             turn(ANGLES[0][3], NORMAL_POWER + POW_OFFSET[0][3], TURN_DELAY[0][3]);
             break;
+        case 17 :
         case 1 :
             turn(ANGLES[0][4], NORMAL_POWER + POW_OFFSET[0][4], TURN_DELAY[0][4]);
             break;
 
+        /* Actions to do if there are 2 IR senses black line */
         case (16 + 8) :
             turn(ANGLES[1][0], NORMAL_POWER + POW_OFFSET[1][0],TURN_DELAY[1][0]);
             break;
@@ -80,33 +85,45 @@ void loop()
         case (4 + 2) :
             turn(ANGLES[1][2], NORMAL_POWER + POW_OFFSET[1][2], TURN_DELAY[1][2]);
             break;
+        case 18:
         case (2 + 1) :
             turn(ANGLES[1][3], NORMAL_POWER + POW_OFFSET[1][3], TURN_DELAY[1][3]);
             break;
- 
+
+        /* Keep original direction for other cases (which means "noisy cases") */
         default :
-            wheeling.write(SERVO_ZERO);
-            delay(timestep);
+            servo.writeMicroseconds(NORMAL_POWER);
+            delay(NOP_TIME);
   }
 }  
 
 
-void track_data()
+void track_sample()
 {
-  for(int i = 0; i < 5; i++) {
-    IR_val[i] = analogRead(IR_pin[i]);
-  }
-  IR_state = get_IR_state();
+    /* initialize IR value */
+    for(int i = 0; i < 5; i++)
+        IR_val[i] = 0;
+
+    /* sampple SAMPLE_TIMES, with time interval SAMPLE_INTERVAL */
+    for(int i = 0; i < SAMPLE_TIMES; i++) {
+        delay(SAMPLE_INTERVAL);
+        for(int j = 0; j < 5; j++)
+            IR_val[j] += analogRead(IR_pin[j]);
+    }
+
+    for(int i = 0; i < 5; i++)
+        IR_val[i] /= SAMPLE_TIMES;
+    IR_state = get_IR_state();
 }
 
 unsigned int get_IR_state()
 {
     unsigned int ret = 0;
-    ret += IR_val[4]>500?1:0;
-    ret += IR_val[3]>500?2:0; 
-    ret += IR_val[2]>500?4:0;
-    ret += IR_val[1]>500?8:0;
-    ret += IR_val[0]>500?16:0;  
+    ret += IR_val[4]>IR_THREASHOLD?1:0;
+    ret += IR_val[3]>IR_THREASHOLD?2:0; 
+    ret += IR_val[2]>IR_THREASHOLD?4:0;
+    ret += IR_val[1]>IR_THREASHOLD?8:0;
+    ret += IR_val[0]>IR_THREASHOLD?16:0;  
     return ret;
 }
 
@@ -114,9 +131,9 @@ void DEBUG()
 {
     for(int i = 0; i < 5; i++) {
         Serial.print(i, DEC);
-        Serial.print(" ");
+        Serial.print(" : ");
         Serial.print(IR_val[i], DEC);
-        Serial.print(" ");
+        Serial.print(" || ");
     }
     Serial.print(" IR_state : ");
     Serial.println(IR_state, DEC);

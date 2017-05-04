@@ -18,7 +18,7 @@ void setup() {
 void loop() {
   servo.writeMicroseconds(2000);
   delay(15000);
-  servo.writeMicroseconds(1000);
+  servo.writeMicroseconds(1200);
   delay(15000); 
 }
 
