@@ -23,12 +23,12 @@ int ANGLES[2][IR_NUM] = {{0}};
 
 /* user defined settings */
 #define NOP_TIME 100
-#define NORMAL_POWER 1366
+#define NORMAL_POWER 1340
 const int ANGLE_OFFSET[2][IR_NUM] = {{13, 5, 0, -5, -15}, 
                                 {8, 2, -2, -8, 0}};
-const int POW_OFFSET[2][IR_NUM] = {{0, 0, -20, 30, 45}, //25
+const int POW_OFFSET[2][IR_NUM] = {{100, 10, -20, 10, 150}, //25
                               {0, 0, 3, 3, 0}};
-const int TURN_DELAY[2][IR_NUM] = {{200, 20, 20, 100, 400},  
+const int TURN_DELAY[2][IR_NUM] = {{600, 20, 20, 200, 800},  
                               {20, 20, 20, 20, 0}};
 #define IR_THREASHOLD 500
 #define SAMPLE_INTERVAL 5
