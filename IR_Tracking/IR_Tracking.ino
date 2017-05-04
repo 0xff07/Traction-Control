@@ -27,11 +27,11 @@ const int ANGLE_OFFSET[2][5] = {{15, 10, 0, -10, -15},
                                 {12, 5, -5, -12, 0}};
 const int POW_OFFSET[2][5] = {{0, 0, 0, 0, 0}, 
                               {0, 0, 0, 0, 0}};
-const int TURN_DELAY[2][5] = {{400, 400, 400, 400, 400},  
-                              {300, 300, 300, 300, 0}};
+const int TURN_DELAY[2][5] = {{120, 120, 120, 120, 120},  
+                              {120, 120, 120, 120, 0}};
 #define IR_THREASHOLD 500
-#define SAMPLE_INTERVAL 10
-#define SAMPLE_TIMES 3
+#define SAMPLE_INTERVAL 2
+#define SAMPLE_TIMES 25
 
 void setup()
 {  
@@ -50,7 +50,7 @@ void setup()
 
 void loop() 
 {    
-    track_data();
+    sample_data();
     
     IR_state = get_IR_state();
     DEBUG(); 
@@ -98,7 +98,7 @@ void loop()
 }  
 
 
-void track_sample()
+void sample_data()
 {
     /* initialize IR value */
     for(int i = 0; i < 5; i++)
